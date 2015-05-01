@@ -123,8 +123,8 @@ class FunctionSignature(LeafSignature):
             signature_elm = getattr(self._signature, elm)
             original_elm = getattr(original._signature, elm)
             if (signature_elm != original_elm):
-                errors.append('%s ==> original: %s, new: %s'.format(
-                    elm, original_elm, signature_elm))
+                errors.append('%s ==> original: %s, new: %s' %
+                              (elm, original_elm, signature_elm))
         if errors:
             return "Function signature has changed:\n%s" % '\n'.join(errors)
 
