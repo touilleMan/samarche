@@ -66,7 +66,7 @@ class TestSaveLoad(BaseTest):
 
     def test_dump_2(self):
         # Try with standart lib modules
-        for mod in ['tempfile', 'json', 'os']:
+        for mod in ['tempfile', 'json']:
             tmp = tempfile.TemporaryFile(mode='w+b')
             signature = samarche.build_signature(mod)
             samarche.dump(signature, tmp)
