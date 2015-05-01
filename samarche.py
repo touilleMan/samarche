@@ -142,11 +142,15 @@ class FunctionSignature(LeafSignature):
                     self._signature["defaults"] = signature_factory(
                         argspec.defaults)
             if argspec.kwonlydefaults:
-                self._signature["kwonlydefaults"] = {k: signature_factory(v) for k, v in argspec.kwonlydefaults.items()}
+                self._signature["kwonlydefaults"] = {
+                    k: signature_factory(v)
+                    for k, v in argspec.kwonlydefaults.items()}
             if argspec.annotations:
-                self._signature["annotations"] = {k: signature_factory(v) for k, v in argspec.annotations.items()}
+                self._signature["annotations"] = {
+                    k: signature_factory(v)
+                    for k, v in argspec.annotations.items()}
             # Serialize params
-        except TypeError as e:
+        except TypeError:
             # Cannot use metaprogramming on C functions
             self._built_in_function = True
 
