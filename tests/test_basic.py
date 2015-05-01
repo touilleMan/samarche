@@ -1,6 +1,9 @@
 import pytest
 import samarche
-from importlib import reload
+try:
+    from importlib import reload
+except ImportError:
+    from imp import reload
 
 
 def test_basic():
