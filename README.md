@@ -45,7 +45,7 @@ import samarche
 
 signature = samarche.build_signature("my_api")
 with open('my_api.signature', 'wb') as fd:
-  samarche.dump(signature, f)
+    samarche.dump(signature, f)
 ```
 
 Then put somewhere in your tests
@@ -53,7 +53,7 @@ Then put somewhere in your tests
 with open('my_api.signature', 'rb') as fd:
   original_signature = samarche.load(fd)
 try:
-  samarche.check_signature('my_api', original_signature)
+    samarche.check_signature('my_api', original_signature)
 except samarche.ValidationError as e:
-  print("API has changed : {}".format(e))
+    print("API has changed : {}".format(e))
 ```
