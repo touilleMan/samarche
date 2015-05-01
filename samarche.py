@@ -1,14 +1,14 @@
-from functools import wraps
 from importlib import import_module
 import inspect
 
 # Republishing for easy serialization
-from pickle import load, loads, dump, dumps
+from pickle import load, loads, dump, dumps  # noqa
 
 
 def import_string(dotted_path):
     """
-    Import a dotted module path or a element from it if a `:` separator is provided
+    Import a dotted module path or a element from it if a `:` separator
+    is provided
     :arg dotted_path: path to import (e.g. 'my_module.my_package:MyClass')
     """
     try:
@@ -38,7 +38,8 @@ def signature_factory(target):
         return AttributeSignature(target)
 
 
-class ValidationError(Exception): pass
+class ValidationError(Exception):
+    pass
 
 
 class Signature:
@@ -63,7 +64,6 @@ class Signature:
         if self.__class__ != signature.__class__:
             return ('type has changed (orginal: `%s`, now: `%s`)' %
                     (self.__class__.__name__, signature.__class__.__name__))
-
 
     def __eq__(self, other):
         return self._signature == other._signature
@@ -91,15 +91,14 @@ class NodeSignature(Signature):
         errors = {}
         original_keys = original._signature.keys()
         keys = self._signature.keys()
-        errors.update({m: 'missing element' for m in  original_keys - keys})
-        errors.update({u: 'unknown element' for u in  keys - original_keys})
+        errors.update({m: 'missing element' for m in original_keys - keys})
+        errors.update({u: 'unknown element' for u in keys - original_keys})
         for key in original_keys & keys:
             err = self._signature[key].validate(original._signature[key])
             if err:
                 errors[key] = err
         if errors:
             return errors
-
 
 
 class ModuleSignature(NodeSignature):
@@ -121,9 +120,11 @@ class FunctionSignature(LeafSignature):
         errors = []
         for elm in ["args", "varargs", "varkw", "defaults",
                     "kwonlyargs", "kwonlydefaults", "annotations"]:
-            if getattr(self._signature, elm) != getattr(original._signature, elm):
-                errors.append('%s ==> original: %s, new: %s' %
-                    (key, getattr(self._signature, elm), getattr(original._signature, elm)))
+            signature_elm = getattr(self._signature, elm)
+            original_elm = getattr(original._signature, elm)
+            if (signature_elm != original_elm):
+                errors.append('%s ==> original: %s, new: %s'.format(
+                    elm, original_elm, signature_elm))
         if errors:
             return "Function signature has changed:\n%s" % '\n'.join(errors)
 

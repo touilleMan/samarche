@@ -20,7 +20,6 @@ class ApiPackage1Class1:
     @public_property2.setter
     def public_property2(self, value):
         self._public_property2 = value
-    
 
     def _fake_private(self):
         pass

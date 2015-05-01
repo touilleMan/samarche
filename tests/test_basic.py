@@ -48,7 +48,7 @@ class TestSaveLoad(BaseTest):
         dumped = samarche.dumps(self.original_signature)
         loaded_signature = samarche.loads(dumped)
         assert not loaded_signature.validate(self.original_signature)
-    
+
 
 class TestChangingApi(BaseTest):
 
@@ -88,7 +88,7 @@ class TestChangingApi(BaseTest):
         saved1 = self.api_module.api_package1.ApiPackage1Class1
         del self.api_module.api_package1.ApiPackage1Class1
         self.api_module.api_package1.new_var = 'new_var'
-        self.api_module.api_package2 = self.api_module.api_package1        
+        self.api_module.api_package2 = self.api_module.api_package1
         signature = samarche.signature_factory(self.api_module)
         errors = signature.validate(self.original_signature)
         assert errors
