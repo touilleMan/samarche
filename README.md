@@ -21,7 +21,7 @@ class Foo:
     def thing(self):
         return "doh"
  
-# Your tests to make sure the class stay consistent
+# Your tests to make sure the class stays consistent
 self.assertTrue(hasattr(Foo, 'bar'))
 self.assertTrue(hasattr(Foo, 'thing'))
 self.assertTrue(hasattr(Foo(), 'stuff'))
@@ -31,7 +31,7 @@ Unfortunatly those tests are basically writting all your API a second time, ther
 
 Samarche allow you to take a snapshop of your API (called a `signature`) and then be able to test your evolving codebase against it.
 
-Samarche register only public members (i.e. everything starting by `_` is skiped)
+Samarche register only public members (i.e. everything starting by `_` is skipped)
 You can create signatures from a `module`, `module.package` and even `module.package:package_attribute`
 
 
