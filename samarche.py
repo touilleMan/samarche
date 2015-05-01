@@ -34,6 +34,8 @@ def signature_factory(target):
         return ClassSignature(target)
     elif inspect.isfunction(target):
         return FunctionSignature(target)
+    elif inspect.isgenerator(target) or inspect.isgeneratorfunction(target):
+        return GeneratorSignature(target)
     else:
         return AttributeSignature(target)
 
@@ -51,35 +53,33 @@ class Signature:
         if target:
             self.build_signature(target)
 
-    def encode(self):
+    def __str__(self):
         raise NotImplementedError
 
     def build_signature(self, target):
-        raise NotImplementedError
-
-    def decode(self):
-        raise NotImplementedError
+        self._name = target.__name__
 
     def validate(self, signature):
         if self.__class__ != signature.__class__:
-            return ('type has changed (orginal: `%s`, now: `%s`)' %
-                    (self.__class__.__name__, signature.__class__.__name__))
+            return ('type mismatch (orginal: %s, actual: %s)' %
+                    (self, signature))
 
     def __eq__(self, other):
-        return self._signature == other._signature
+        return not self.validate(other)
 
 
 class LeafSignature(Signature):
-    def build_signature(self, target):
-        pass
+    pass
 
 
 class NodeSignature(Signature):
+
     def __init__(self, *args, **kwargs):
         self._signature = {}
         super().__init__(*args, **kwargs)
 
     def build_signature(self, target):
+        super().build_signature(target)
         public_attrs = (m for m in dir(target) if not m.startswith('_'))
         for attr in public_attrs:
             self._signature[attr] = signature_factory(getattr(target, attr))
@@ -91,46 +91,106 @@ class NodeSignature(Signature):
         errors = {}
         original_keys = original._signature.keys()
         keys = self._signature.keys()
-        errors.update({m: 'missing element' for m in original_keys - keys})
-        errors.update({u: 'unknown element' for u in keys - original_keys})
+        errors.update({str(original._signature[m]): 'missing element'
+                       for m in original_keys - keys})
+        errors.update({str(self._signature[u]): 'unknown element'
+                       for u in keys - original_keys})
         for key in original_keys & keys:
             err = self._signature[key].validate(original._signature[key])
             if err:
-                errors[key] = err
+                errors[str(self._signature[key])] = err
         if errors:
             return errors
 
 
 class ModuleSignature(NodeSignature):
-    pass
+
+    def __str__(self):
+        return 'Module %s' % self._name
 
 
 class ClassSignature(NodeSignature):
-    pass
+
+    def __str__(self):
+        return 'Class %s' % self._name
 
 
 class FunctionSignature(LeafSignature):
+
+    def __init__(self, *args, **kwargs):
+        self._built_in_function = False
+        self._signature = None
+        super().__init__(*args, **kwargs)
+
     def build_signature(self, target):
-        self._signature = inspect.getfullargspec(target)
+        super().build_signature(target)
+        self._built_in_function = False
+        self._signature = None
+        try:
+            argspec = inspect.getfullargspec(target)
+            self._signature = {
+                "args": argspec.args,
+                "varargs": argspec.varargs,
+                "varkw": argspec.varkw,
+                "kwonlyargs": argspec.kwonlyargs
+            }
+            if argspec.defaults:
+                if isinstance(argspec.defaults, list):
+                    self._signature["defaults"] = (signature_factory(d)
+                                                   for d in argspec.defaults)
+                else:
+                    self._signature["defaults"] = signature_factory(
+                        argspec.defaults)
+            if argspec.kwonlydefaults:
+                self._signature["kwonlydefaults"] = {k: signature_factory(v) for k, v in argspec.kwonlydefaults.items()}
+            if argspec.annotations:
+                self._signature["annotations"] = {k: signature_factory(v) for k, v in argspec.annotations.items()}
+            # Serialize params
+        except TypeError as e:
+            # Cannot use metaprogramming on C functions
+            self._built_in_function = True
+
+    def __str__(self):
+        if self._built_in_function:
+            return 'Function %s <built-in function>' % self._name
+        else:
+            return 'Function %s (%s)' % (self._name, self._signature)
 
     def validate(self, original):
         errors = super().validate(original)
         if errors:
             return errors
-        errors = []
-        for elm in ["args", "varargs", "varkw", "defaults",
-                    "kwonlyargs", "kwonlydefaults", "annotations"]:
-            signature_elm = getattr(self._signature, elm)
-            original_elm = getattr(original._signature, elm)
-            if (signature_elm != original_elm):
-                errors.append('%s ==> original: %s, new: %s' %
-                              (elm, original_elm, signature_elm))
-        if errors:
-            return "Function signature has changed:\n%s" % '\n'.join(errors)
+        if (self._built_in_function != original._built_in_function or
+                self._signature != original._signature):
+            return ("Function signature has changed, original: %s, actual %s" %
+                    (self, original))
 
 
 class AttributeSignature(LeafSignature):
-    pass
+
+    def __init__(self, *args, **kwargs):
+        self._type = None
+        super().__init__(*args, **kwargs)
+
+    def build_signature(self, target):
+        self._type = type(target).__name__
+
+    def validate(self, original):
+        errors = super().validate(original)
+        if errors:
+            return errors
+        if self._type != original._type:
+            return ("Attribute type has changed: original %s, actual %s" %
+                    (self._type, original._type))
+
+    def __str__(self):
+        return 'Attribute'
+
+
+class GeneratorSignature(LeafSignature):
+
+    def __str__(self):
+        return 'Generator'
 
 
 def build_signature(target_path):
