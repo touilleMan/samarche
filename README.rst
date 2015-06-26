@@ -1,4 +1,5 @@
-|Build Status|
+.. |Build Status| image:: https://travis-ci.org/touilleMan/samarche.svg
+   :target: https://travis-ci.org/touilleMan/samarche
 
 Samarche
 ========
@@ -67,6 +68,3 @@ Then put somewhere in your tests
         samarche.check_signature('my_api', original_signature)
     except samarche.ValidationError as e:
         print("API has changed : {}".format(e))
-
-.. |Build Status| image:: https://travis-ci.org/touilleMan/samarche.svg
-   :target: https://travis-ci.org/touilleMan/samarche
