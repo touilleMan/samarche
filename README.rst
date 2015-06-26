@@ -1,5 +1,6 @@
-.. |Build Status| image:: https://travis-ci.org/touilleMan/samarche.svg
-   :target: https://travis-ci.org/touilleMan/samarche
+.. image:: https://travis-ci.org/touilleMan/samarche.svg?branch=master
+    :target: https://travis-ci.org/touilleMan/samarche
+    :alt: Travis-CI
 
 Samarche
 ========
